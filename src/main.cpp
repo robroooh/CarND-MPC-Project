@@ -9,6 +9,8 @@
 #include "MPC.h"
 #include "json.hpp"
 
+// TODO: Read this before bed https://discussions.udacity.com/t/mpc-quiz-help-needed-for-understanding/251178/35
+
 // for convenience
 using json = nlohmann::json;
 
@@ -130,6 +132,8 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
+          // https://discussions.udacity.com/t/why-do-we-need-to-devide-steering-angle-by-deg2rad-25/256519/4
+          // https://discussions.udacity.com/t/how-does-the-mpc-manipulate-this-90-degree-turn-example/273950
           msgJson["steering_angle"] = steer_value/deg2rad(25);
           msgJson["throttle"] = throttle_value;
 
@@ -165,6 +169,7 @@ int main() {
           //
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
+          // TODO: Read about latency here https://discussions.udacity.com/t/how-to-take-into-account-latency-of-the-system/248671/2
           // this_thread::sleep_for(chrono::milliseconds(100));
           this_thread::sleep_for(chrono::milliseconds(0));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);

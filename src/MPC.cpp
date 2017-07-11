@@ -254,6 +254,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   //
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
+
+  // TODO Convert car space: https://discussions.udacity.com/t/mpc-car-space-conversion-and-output-of-solve-intuition/249469
+  // TODO: Follow here for the trajectory plot https://discussions.udacity.com/t/how-to-get-the-mpc-trajectory-and-plot-it/252583/4
   return {solution.x[x_start + 1],   solution.x[y_start + 1],
           solution.x[psi_start + 1], solution.x[v_start + 1],
           solution.x[cte_start + 1], solution.x[epsi_start + 1],
