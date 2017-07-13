@@ -6,7 +6,7 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 25;
+size_t N = 5;
 double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
@@ -112,8 +112,24 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + t - 1];
       AD<double> a0 = vars[a_start + t - 1];
 
-      AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-      AD<double> psides0 = CppAD::atan(coeffs[1]);
+
+      // REFACTOR THIS
+      AD<double> f0 = 0.0;
+      for (int i = 0; i < coeffs.size(); i++) {
+        f0 += coeffs[i] * CppAD::pow(x0, i);
+      }
+
+      // AD<double> f0 = coeffs[0] + coeffs[1] * x0;
+      // AD<double> psides0 = CppAD::atan(coeffs[1]);
+      // REFACTOR THIS
+
+      // Compute the derivative
+      // i=0 is 0
+      AD<double> psides0 = 0.0;
+      for (int i = 1; i < coeffs.size(); i++) {
+        psides0 += i*coeffs[i] * CppAD::pow(x0, i-1);
+      }
+      psides0 = CppAD::atan(psides0);
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.
@@ -156,6 +172,14 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   size_t n_vars = N * 6 + (N - 1) * 2;
   // TODO: Set the number of constraints
   size_t n_constraints = N * 6;
+
+  // Make life better
+	double x = state[0];
+	double y = state[1];
+	double psi = state[2];
+	double v = state[3];
+	double cte = state[4];
+  double epsi = state[5];
 
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
@@ -257,8 +281,17 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   // TODO Convert car space: https://discussions.udacity.com/t/mpc-car-space-conversion-and-output-of-solve-intuition/249469
   // TODO: Follow here for the trajectory plot https://discussions.udacity.com/t/how-to-get-the-mpc-trajectory-and-plot-it/252583/4
+  /*
   return {solution.x[x_start + 1],   solution.x[y_start + 1],
           solution.x[psi_start + 1], solution.x[v_start + 1],
           solution.x[cte_start + 1], solution.x[epsi_start + 1],
           solution.x[delta_start],   solution.x[a_start]};
+          */
+  vector<double> result = {solution.x[delta_start], solution.x[a_start]};
+  for (int i = 0; i < N; i++){
+    result.push_back(solution.x[x_start+i+1]);
+    result.push_back(solution.x[y_start+i+1]);
+  }
+  return result;
 }
+
