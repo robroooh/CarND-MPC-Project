@@ -79,7 +79,7 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    cout << sdata << endl;
+    // cout << sdata << endl;
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -94,6 +94,16 @@ int main() {
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
           size_t i;
+
+
+          /*
+          // predict state in 100ms
+          auto double latency = 0.1; 
+          auto x = x + v*cos(psi)*latency;
+          auto y = y + v*sin(psi)*latency;
+          auto psi = psi + v*delta/Lf*latency;
+          auto v = v + acceleration*latency;
+          */
           // std::cout << "start everything" << std::endl;
 
           /*
@@ -114,7 +124,7 @@ int main() {
 
           // TODO: how to calculate cte & error of psi
           auto coeffs = polyfit(ptsx_car, ptsy_car, 3);
-          double cte = polyeval(coeffs, px);
+          double cte = polyeval(coeffs, 0);
           double epsi = -atan(coeffs[1]);
 
           Eigen::VectorXd state(6);
@@ -138,12 +148,14 @@ int main() {
           // put the minus sign just to show dominance
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          double steer_value = -vars[0]/deg2rad(25);
+          double Lf = 2.67;
+          double steer_value = -vars[0]/(deg2rad(25)*Lf);
           double throttle_value = vars[1];
 
           json msgJson;
           // https://discussions.udacity.com/t/why-do-we-need-to-devide-steering-angle-by-deg2rad-25/256519/4
           // https://discussions.udacity.com/t/how-does-the-mpc-manipulate-this-90-degree-turn-example/273950
+          
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
 
@@ -157,7 +169,7 @@ int main() {
           for (i = 2; i<vars.size(); i+=2){
             mpc_x_vals.push_back(vars[i]);
             mpc_y_vals.push_back(vars[i+1]);
-          } 
+          }
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -169,16 +181,18 @@ int main() {
           // std::cout << "Adding next pts val" << std::endl;
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-          for(i = 0; i < ptsx.size(); i++) {
-            next_x_vals.push_back(ptsx_car[i]);
-            next_y_vals.push_back(ptsy_car[i]);
+          double poly_inc = 2.5;
+          int num_points = 25;
+          for(i = 0; i < num_points; i++) {
+            next_x_vals.push_back(poly_inc*i);
+            next_y_vals.push_back(polyeval(coeffs, poly_inc*i));
           }
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          // std::cout << msg << std::endl;
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
@@ -189,8 +203,8 @@ int main() {
           // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
           // SUBMITTING.
           // TODO: Read about latency here https://discussions.udacity.com/t/how-to-take-into-account-latency-of-the-system/248671/2
-          // this_thread::sleep_for(chrono::milliseconds(100));
-          this_thread::sleep_for(chrono::milliseconds(0));
+          this_thread::sleep_for(chrono::milliseconds(100));
+          // this_thread::sleep_for(chrono::milliseconds(0));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
       } else {
