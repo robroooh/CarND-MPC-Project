@@ -185,12 +185,19 @@ int main() {
           // std::cout << "Adding next pts val" << std::endl;
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
+          
           double poly_inc = 2.5;
           int num_points = 25;
           for(i = 0; i < num_points; i++) {
             next_x_vals.push_back(poly_inc*i);
             next_y_vals.push_back(polyeval(coeffs, poly_inc*i));
           }
+          /*
+          for(i = 0; i < ptsx_car.size(); i++) {
+            next_x_vals.push_back(ptsx_car(i));
+            next_y_vals.push_back(ptsy_car(i));
+          }
+          */
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
