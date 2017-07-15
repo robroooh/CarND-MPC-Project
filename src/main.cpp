@@ -18,7 +18,6 @@ using json = nlohmann::json;
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
-size_t N = 5;
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
@@ -94,6 +93,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          size_t i;
+          // std::cout << "start everything" << std::endl;
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -101,24 +102,27 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          Eigen::VectorXd ptsx_car;
-          Eigen::VectorXd ptsy_car;
-
-          for(int i = 0; i < N; i++) {
+          Eigen::VectorXd ptsx_car(6);
+          Eigen::VectorXd ptsy_car(6);
+          // std::cout << "Start Converting from global to car" << std::endl;
+          for(i = 0; i < ptsx.size(); i++) {
             ptsx_car[i] = ((ptsx[i] - px) * cos(psi) + (ptsy[i] - py) * sin(psi));
             ptsy_car[i] = ((ptsy[i] - py) * cos(psi) - (ptsx[i] - px) * sin(psi));
           }
 
+          // std::cout << "Converting from global to car" << std::endl;
 
           // TODO: how to calculate cte & error of psi
           auto coeffs = polyfit(ptsx_car, ptsy_car, 3);
           double cte = polyeval(coeffs, px);
-          double epsi = psi - atan(coeffs[1]);
+          double epsi = -atan(coeffs[1]);
 
           Eigen::VectorXd state(6);
-          state << px, py, psi, v, cte, epsi;
+          state << 0, 0, 0, v, cte, epsi;
 
           auto vars = mpc.Solve(state, coeffs);
+
+          // std::cout << "Solve is done" << std::endl;
           /*
           std::cout << "x = " << vars[0] << std::endl;
           std::cout << "y = " << vars[1] << std::endl;
@@ -149,9 +153,10 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
-          for (int i = 0; i< N; i+=2){
-            mpc_x_vals.push_back(vars[i+2]);
-            mpc_y_vals.push_back(vars[i+3]);
+          // std::cout << "Adding MPC val" << std::endl;
+          for (i = 2; i<vars.size(); i+=2){
+            mpc_x_vals.push_back(vars[i]);
+            mpc_y_vals.push_back(vars[i+1]);
           } 
 
           msgJson["mpc_x"] = mpc_x_vals;
@@ -161,11 +166,12 @@ int main() {
           vector<double> next_x_vals;
           vector<double> next_y_vals;
 
+          // std::cout << "Adding next pts val" << std::endl;
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-          for(int i = 0; i < N; i++) {
-            next_x_vals[i] = ptsx_car[i];
-            next_y_vals[i] = ptsy_car[i];
+          for(i = 0; i < ptsx.size(); i++) {
+            next_x_vals.push_back(ptsx_car[i]);
+            next_y_vals.push_back(ptsy_car[i]);
           }
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;

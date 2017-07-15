@@ -113,23 +113,9 @@ class FG_eval {
       AD<double> a0 = vars[a_start + t - 1];
 
 
-      // REFACTOR THIS
-      AD<double> f0 = 0.0;
-      for (int i = 0; i < coeffs.size(); i++) {
-        f0 += coeffs[i] * CppAD::pow(x0, i);
-      }
-
-      // AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-      // AD<double> psides0 = CppAD::atan(coeffs[1]);
-      // REFACTOR THIS
-
-      // Compute the derivative
-      // i=0 is 0
-      AD<double> psides0 = 0.0;
-      for (int i = 1; i < coeffs.size(); i++) {
-        psides0 += i*coeffs[i] * CppAD::pow(x0, i-1);
-      }
-      psides0 = CppAD::atan(psides0);
+      AD<double> f0 = coeffs[0] + coeffs[1]*x0 + coeffs[2]*x0*x0 + coeffs[3]*x0*x0*x0;
+      // atan(f'(x)) is the desired angle
+      AD<double> psides0 = CppAD::atan(coeffs[1] + 2*coeffs[2]*x0 + 3*coeffs[3]*x0*x0);
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.
@@ -184,7 +170,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // Initial value of the independent variables.
   // SHOULD BE 0 besides initial state.
   Dvector vars(n_vars);
-  for (int i = 0; i < n_vars; i++) {
+  for (i = 0; i < n_vars; i++) {
     vars[i] = 0;
   }
 
@@ -194,7 +180,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
 
   // Set all non-actuators upper and lowerlimits
   // to the max negative and positive values.
-  for (int i = 0; i < delta_start; i++) {
+  for (i = 0; i < delta_start; i++) {
     vars_lowerbound[i] = -1.0e19;
     vars_upperbound[i] = 1.0e19;
   }
@@ -202,14 +188,14 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // The upper and lower limits of delta are set to -25 and 25
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
-  for (int i = delta_start; i < a_start; i++) {
+  for (i = delta_start; i < a_start; i++) {
     vars_lowerbound[i] = -0.436332;
     vars_upperbound[i] = 0.436332;
   }
 
   // Acceleration/decceleration upper and lower limits.
   // NOTE: Feel free to change this to something else.
-  for (int i = a_start; i < n_vars; i++) {
+  for (i = a_start; i < n_vars; i++) {
     vars_lowerbound[i] = -1.0;
     vars_upperbound[i] = 1.0;
   }
@@ -218,7 +204,7 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // Should be 0 besides initial state.
   Dvector constraints_lowerbound(n_constraints);
   Dvector constraints_upperbound(n_constraints);
-  for (int i = 0; i < n_constraints; i++) {
+  for (i = 0; i < n_constraints; i++) {
     constraints_lowerbound[i] = 0;
     constraints_upperbound[i] = 0;
   }
@@ -288,10 +274,11 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
           solution.x[delta_start],   solution.x[a_start]};
           */
   vector<double> result = {solution.x[delta_start], solution.x[a_start]};
-  for (int i = 0; i < N; i++){
+  for (i = 0; i < N; i++){
     result.push_back(solution.x[x_start+i+1]);
     result.push_back(solution.x[y_start+i+1]);
   }
+  // std::cout << "Pushed back the solution" << std::endl;
   return result;
 }
 
