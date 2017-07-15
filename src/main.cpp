@@ -93,17 +93,20 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double delta = j[1]["steering_angle"];
+          double acceleration = j[1]["throttle"];
+          double diff_x;
+          double diff_y;
           size_t i;
 
-
-          /*
           // predict state in 100ms
-          auto double latency = 0.1; 
-          auto x = x + v*cos(psi)*latency;
-          auto y = y + v*sin(psi)*latency;
-          auto psi = psi + v*delta/Lf*latency;
-          auto v = v + acceleration*latency;
-          */
+          auto latency = 0.1; 
+          double Lf = 2.67;
+          px = px + v*cos(psi)*latency;
+          py = py + v*sin(psi)*latency;
+          psi = psi + v*delta/Lf*latency;
+          v = v + acceleration*latency;
+          
           // std::cout << "start everything" << std::endl;
 
           /*
@@ -116,8 +119,10 @@ int main() {
           Eigen::VectorXd ptsy_car(6);
           // std::cout << "Start Converting from global to car" << std::endl;
           for(i = 0; i < ptsx.size(); i++) {
-            ptsx_car[i] = ((ptsx[i] - px) * cos(psi) + (ptsy[i] - py) * sin(psi));
-            ptsy_car[i] = ((ptsy[i] - py) * cos(psi) - (ptsx[i] - px) * sin(psi));
+            double diff_x = ptsx[i] - px;
+            double diff_y = ptsy[i] - py;
+            ptsx_car[i] = (diff_x * cos(psi) + diff_y * sin(psi));
+            ptsy_car[i] = (diff_y * cos(psi) - diff_x * sin(psi));
           }
 
           // std::cout << "Converting from global to car" << std::endl;
@@ -148,7 +153,6 @@ int main() {
           // put the minus sign just to show dominance
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          double Lf = 2.67;
           double steer_value = -vars[0]/(deg2rad(25)*Lf);
           double throttle_value = vars[1];
 
