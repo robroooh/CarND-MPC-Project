@@ -2,6 +2,48 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## MPC Model
+This project uses a simple Kinematic model, simple model that ignore forces, gravity, mass
+
+
+### The state vector includes:
+ - `x,y` as a position of the car
+ - `psi` as a heading angle of the car
+ - `v` as a vecolicy of the car
+
+### The actuators used:
+ - `delta` as a steering angle
+ - `a` as a acceleration or breaking, throttle pedal
+
+### The update euqations: (please observe in latex math style)
+ - `x​_{t+1}​​=x_​t​​+v_​t​​∗cos(ψ_​t​​)∗dt`
+ - `y​_{t+1}​​=y​_t​​+v​_t​​∗sin(ψ​_t​​)∗dt`
+ - `ψ​_{t+1}​​=ψ​_t​​+​(L​_f/​​​​v​_t)​​​​∗δ∗dt`
+ - `v​_{t+1}​​=v​_t​​+a_​t​​∗dt`
+
+Note: the `L_f` is, `2.67`, given by Udacity which is the distance from the front of the car to its cog (center of gravity).
+
+### Error equations:
+
+we observe 2 errors, which are cross track error, how far we are from the trajectory line. psi error, are we heading to the right direction.
+
+ - `cte_{​t+1}​​=cte_​t​​+v_​t​​∗sin(eψ_​t​​)∗dt`
+ - `eψ​_{t+1}​​=eψ_​t​​+​(L​_f/​​​​v_​t)​​​​∗δ​_t​​∗dt`
+
+## Timestep Length and Elapsed Duration (N & dt)
+
+From trial and error, I used `N=5;dt=1.0` for the firt drive. it seems that the prediction does not work well, and it was too slow to adapt to changes. Therefore, I try to increate the Time horizon `T=N*dt` to `N=8,dt=0.15` which performs nicely with trade-off for computational power since the `T` increases. 
+
+## Polynomial Fitting and MPC Preprocessing
+
+ - The waypoints are transformed into car's coordinate before feed into MPC.
+ 
+## Model Predictive Control with Latency
+
+ - State values `px,py,psi,v` is multiplied by latency to predict state in 100ms (See `main.cpp` line 103-108)
+ - Simply penalize the cost function to take use of actuators (both magnitudes and sequential action) into account (please see `MPC.cpp` line 58-74 for more detail).
+
+-------------------
 
 ## Dependencies
 
@@ -43,6 +85,8 @@ Self-Driving Car Engineer Nanodegree Program
 
 
 ## Basic Build Instructions
+
+0. use `bclean.sh` to make your life easier or
 
 
 1. Clone this repo.
