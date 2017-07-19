@@ -2,6 +2,9 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+
+![Driving](/img/car_driving.gif)
+
 ## MPC Model
 This project uses a simple Kinematic model, simple model that ignore forces, gravity, mass
 
